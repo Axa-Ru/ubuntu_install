@@ -386,10 +386,13 @@ if [ $ANS = "Y" ]; then
 fi
 
 answer "+---------------------------------------------------+\n" \
-       "|  StarDict                                         |\n" \
+       "|  GoldenDict                                       |\n" \
+       "|  http://ubuntuportal.com/2013/02/goldendict-      |\n" \
+       "|  complete-dictionary-app-for-ubuntu-based-        |\n" \
+       "|  distribution.html                                |\n" \
        "+---------------------------------------------------+\n" 
 if [ $ANS = "Y" ]; then
-	apt install -y stardict-tools stardict-gtk
+	apt install -y goldendict
 fi
 
 answer "+---------------------------------------------------+\n" \
@@ -432,9 +435,10 @@ fi
 
 answer "+---------------------------------------------------+\n" \
        "| WidGet погоды                                     |\n" \
+       "| http://www.noobslab.com/2015/04/                  |" \
+       "|    /04/gis-weather-widget-updated-and-now.html    |" \
        "+---------------------------------------------------+\n" 
 if [ $ANS = "Y" ]; then
-    # http://www.noobslab.com/2015/04/gis-weather-widget-updated-and-now.html
     add-apt-repository -y ppa:noobslab/apps && apt update
     apt install -y gis-weather
 fi
