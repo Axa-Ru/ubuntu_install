@@ -53,10 +53,12 @@ fakeInstall()
 ######################################################################
 #     Начало скрипта
 
+
 AUTO="N"
 VAL=$1
 VAL=${VAL:0:1}
 if [ $VAL = "A" ]; then AUTO="Y"; fi
+
 answer "===========================================================\n" \
        " Скрипт установки и настройки ${C_YEL}${OS}${C_CYA} \n" \
        " Версия:   ${C_YEL}${SCR_VER}${C_CYA} \n\n" \
@@ -69,15 +71,21 @@ answer "===========================================================\n" \
        "==========================================================="
 
 # --------------------------------------------------------------
-#  Под Рутом
+#  Проверка на то, что мы запускаем под Рутом
 #   sudo -i 
 # --------------------------------------------------------------
+
+USR=`whoami`
+if [ "$usr" != "root" ]; then
+    echo "Run $0 ar superuser"
+    exit 1
+fi
 
 cd /tmp
 
 answer "+-------------------------------------------------------+\n" \
-       "|   Выключение отправки отчета об ошибках, Avahi        |\n" \
-       "|   Отключение сервиса Avahi                            |\n" \
+       "|   Выключенить отправку отчета об ошибках, Avahi       |\n" \
+       "|   Отключенить сервис Avahi                            |\n" \
        "+-------------------------------------------------------+"
 if [ $ANS = "Y" ]; then
     sed -i 's/enabled=1/enabled=0/g' /etc/default/apport
@@ -85,9 +93,9 @@ if [ $ANS = "Y" ]; then
     sed -i 's/AVAHI_DAEMON_DETECT_LOCAL=1/AVAHI_DAEMON_DETECT_LOCAL=0/g' /etc/default/avahi-daemon
 fi
 
-answer "+------------------------------------------------------------+\n" \
-        "|  Устанавливаем Brother MFC-7840wr System setting->Printers |\n" \
-        "+------------------------------------------------------------+\n"
+answer "+-----------------------------------------------------------+\n" \
+       "| Устанавливаем Brother MFC-7840wr System setting->Printers |\n" \
+       "+-----------------------------------------------------------+\n"
 if [ $ANS = "Y" ]; then
     wget http://www.brother.com/pub/bsc/linux/dlf/brscan3-0.2.11-5.amd64.deb
     brsaneconfig3 -a name=BrotherScanner model=MFC-7840W ip=192.168.56.70
@@ -96,11 +104,12 @@ fi
 answer "+---------------------------------------------------+\n" \
        "| Устанавливаем последнюю версию                    |\n" \
        "|   midnight commander                              |\n" \
-       "| Архиваторы и утилиты:                             |\n" \
-       "|   p7zip-full p7zip-rar unace unrar zip unzip      |\n" \
+       "| Архиваторы:                                       |\n" \
+       "|   p7zip-full p7zip-rar unace rar unrar zip unzip  |\n" \
        "|   sharutils uudeview mpack arj cabextract         |\n" \
-       "|   file-roller rar htop powertop gparted ssh       |\n" \
-       "|   exFat driver                                    |\n" \
+       "|   file-roller                                     |\n" \
+       "| Утилиты:                                          |\n" \
+       "|   htop powertop gparted ssh exFat driver          |\n" \
        "+---------------------------------------------------+" 
 if [ $ANS = "Y" ]; then
     add-apt-repository -y ppa:eugenesan/ppa && apt update
