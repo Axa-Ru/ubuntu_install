@@ -1,7 +1,12 @@
 #!/bin/bash
+
+################################################################## 
+#   Changes
+# 160822 - added Solaar install
+
 OS="Ubuntu 16.04"
 SCR_VER="16.04-2016-08-01"
-USER="axa"	# проверьте имя user. Оно подставится при установке nfs
+USER="axa"	# проверьте имя USER. Оно подставится при установке nfs
 
 #set -e
 
@@ -104,6 +109,7 @@ fi
 answer "+---------------------------------------------------+\n" \
        "| Устанавливаем последнюю версию                    |\n" \
        "|   midnight commander                              |\n" \
+       "|   Double commander                                |\n" \
        "| Архиваторы:                                       |\n" \
        "|   p7zip-full p7zip-rar unace rar unrar zip unzip  |\n" \
        "|   sharutils uudeview mpack arj cabextract         |\n" \
@@ -114,17 +120,18 @@ answer "+---------------------------------------------------+\n" \
 if [ $ANS = "Y" ]; then
     add-apt-repository -y ppa:eugenesan/ppa && apt update
     apt install -y mc
+    add-apt-repository -y ppa:alexx2000/doublecmd && apt update 
+    apt install -y doublecmd-gtk
     apt install -y p7zip-full p7zip-rar unace unrar zip unzip sharutils \
                    uudeview mpack arj cabextract file-roller rar htop powertop \
                    gparted ssh exfat-fuse exfat-utils
 fi
 
 answer "+---------------------------------------------------+\n" \
-       "| Double commander                                  |\n" \
+       "|  Solaar - Logtech radio mice tool                 |\n" \
        "+---------------------------------------------------+" 
 if [ $ANS = "Y" ]; then
-    add-apt-repository -y ppa:alexx2000/doublecmd && apt update 
-    apt install -y doublecmd-gtk
+    apt install -y solaar
 fi
 
 answer "+---------------------------------------------------+\n" \
