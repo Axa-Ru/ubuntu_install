@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OS="Ubuntu 16.04"
-SCR_VER="16.04-2017-06-09"
+SCR_VER="16.04-2017-06-10"
 
 #set -e
 
@@ -33,7 +33,7 @@ AUTO_I915FW="Y"
 AUTO_BROTHER_MFC7840W="Y"
 AUTO_HPLIP="Y"
 AUTO_FILE_UTILS="Y"
-AUTO_SOLAR="N"
+AUTO_SOLAAR="N"
 AUTO_GNOME_FONTMANAGER="Y"
 AUTO_GXNEUR="N"
 AUTO_NFS_CLIENT="Y"
@@ -261,13 +261,14 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     apt install -y p7zip-full p7zip-rar unace unrar zip unzip sharutils \
                    uudeview mpack arj cabextract file-roller rar htop powertop \
                    gparted ssh exfat-fuse exfat-utils
-    # Add start powertop whithout password
+    # Adds start powertop whithout password
     sed -i '/# User privilege specification/a axa     ALL=(root) /usr/sbin/powertop' /etc/sudoers
+
     popd; echo "DONE_FILE_UTILS=1" >> $LOGF
 fi
 
-answer "$AUTO_SOLAR" \
-       "$DONE_SOLAR" \
+answer "$AUTO_SOLAAR" \
+       "$DONE_SOLAAR" \
        "+-----------------------------------------------------------------------------+\n" \
        "|  Solaar - Logtech radio mice tool                                           |\n" \
        "+-----------------------------------------------------------------------------+\n" 
@@ -275,7 +276,7 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     apt install -y solaar
 
-    popd; echo "DONE_SOLAR=1" >> $LOGF
+    popd; echo "DONE_SOLAAR=1" >> $LOGF
 fi
 
 answer "$AUTO_GNOME_FONTMANAGER" \
@@ -573,12 +574,10 @@ fi
 answer "$AUTO_PYTHON36" \
        "$DONE_PYTHON36" \
        "+-----------------------------------------------------------------------------+\n" \
-       "| Install python3.6,                                                          |\n" \
-       "|   PyCharm 2016.3.2                                                          |\n" \
-       "|    http://www.360kb.com/kb/2_24.html                                        |\n" \
-       "|    Build #PY-163.10154.50, built on December 28, 2016                       |\n" \
-       "|    Licensed to lan yu                                                       |\n" \
-       "|    Subscription is active until November 23, 2017                           |\n" \
+       "| Install python3.6                                                           |\n" \
+       "| http://elporfirio.com:1017/                                                 |\n" \
+       "| https://kadara.ru/2016/11/20/pycharm-2016-2-2017-license-server/            |\n" \
+       "| https://jetbrains-server.ru/2017/03/31/pycharm-2016-2017-activation/        |\n" \
        "+-----------------------------------------------------------------------------+\n"
 if [ $ANS = "Y" ]; then pushd /tmp;
 
