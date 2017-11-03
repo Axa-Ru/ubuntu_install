@@ -59,6 +59,7 @@ AUTO_BOOKREADERS="Y"
 AUTO_FB2EDIT="N"
 AUTO_SONY_PRS505="N"
 AUTO_LIBREOFFICE="Y"
+AUTO_WPOFFICE="N"
 AUTO_RUSSIAN_DIC="Y"
 AUTO_GOLDENDICT="Y"
 AUTO_KEEPASSX="Y"
@@ -74,6 +75,7 @@ AUTO_OPENSTM32="Y"
 AUTO_CROSSWORKS="N"
 AUTO_SEGGER="Y"
 AUTO_FRITZING="N"
+AUTO_OUTWIKER="Y"
 
 # --------------------------------------------------------------
 # $1       "Y" Пакет устанавливать в автоматическом режиме
@@ -153,6 +155,8 @@ if [ "$USR" != "root" ]; then
     exit 1
 fi
 
+# --------------------------------------------------------------
+#  Шаблон установочного пакета
 answer "$AUTO_DUMMY" \
        "$DONE_DUMMY" \
        "+-----------------------------------------------------------------------------+\n" \
@@ -162,10 +166,10 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     # 	Здесь разместите команды установки пекета
 
-    popd; echo "DONE_DUMMY=1" >> $LOGF
-fi
+popd; echo "DONE_DUMMY=1" >> $LOGF; fi
 
-
+# --------------------------------------------------------------
+#  Системные программы и утилиты
 answer "$AUTO_AVAHI" \
        "$DONE_AVAHI" \
        "+-----------------------------------------------------------------------------+\n" \
@@ -178,8 +182,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     service apport stop
     sed -i 's/AVAHI_DAEMON_DETECT_LOCAL=1/AVAHI_DAEMON_DETECT_LOCAL=0/g' /etc/default/avahi-daemon
 
-    popd; echo "DONE_AVAHI=1" >> $LOGF
-fi
+popd; echo "DONE_AVAHI=1" >> $LOGF; fi
+
 
 answer "$AUTO_I915FW" \
        "$DONE_I915FW" \
@@ -198,8 +202,32 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     dpkg --install intel-graphics-update-tool_2.0.2_amd64.deb
     intel-graphics-update-tool
 
-    popd; echo "DONE_I915FW=1" >> $LOGF
-fi
+popd; echo "DONE_I915FW=1" >> $LOGF; fi
+
+
+answer "$AUTO_NFS_CLIENT" \
+       "$DONE_NFS_CLIENT" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| nfs client and autonfs                                                      |\n" \
+       "|   http://sysadm.pp.ua/linux/nfs-and-autofs.html                             |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+    
+    apt install -y nfs-common
+    apt install -y autofs
+    sh -c 'echo "/nfs /etc/auto.nfs --timeout=60" >> /etc/auto.master'
+    sh -c 'echo "nas4d0     -rw,soft,intr,rsize=8192,wsize=8192     192.168.56.66:/raid0/data/_NAS_NFS_Exports_/Nas4d0" >> /etc/auto.nfs'
+    sh -c 'echo "srv1d0     -rw,soft,intr,rsize=8192,wsize=8192     192.168.56.67:/home/axa" >> /etc/auto.nfs'
+    /etc/init.d/autofs restart
+    mkdir /home/${USER}/Media
+    chown ${USER}:${USER} /home/${USER}/Media
+    cd /home/${USER}/Media
+    ln -s /nfs/nas4d0 .
+    ln -s /nfs/srv1d0 .
+    ln -s /media/axa .
+    
+popd; echo "DONE_NFS_CLIENT=1" >> $LOGF; fi
+
 
 answer "$AUTO_BROTHER_MFC7840W" \
        "$DONE_BROTHER_MFC7840W" \
@@ -221,8 +249,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     ln -s /usr/lib64/libbrscandec3.so.1 /usr/lib/libbrscandec3.so.1
     ln -s /usr/lib64/libbrscandec3.so.1.0.0 /usr/lib/libbrscandec3.so.1.0.0
 
-    popd; echo "DONE_BROTHER_MFC7840W=1" >> $LOGF
-fi
+popd; echo "DONE_BROTHER_MFC7840W=1" >> $LOGF; fi
+
 
 answer "$AUTO_HPLIP" \
        "$DONE_HPLIP" \
@@ -236,8 +264,55 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     chmod +x hplip-3.16.10.run
     sudo -u $USER sh hplip-3.16.10.run
 
-    popd; echo "DONE_HPLIP=1" >> $LOGF
-fi
+popd; echo "DONE_HPLIP=1" >> $LOGF; fi
+
+
+answer "$AUTO_SOLAAR" \
+       "$DONE_SOLAAR" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "|  Solaar - Logtech radio mice tool                                           |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    apt install -y solaar
+
+popd; echo "DONE_SOLAAR=1" >> $LOGF; fi
+
+
+answer "$AUTO_QUEMU_KVM" \
+       "$DONE_QUEMU_KVM" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| qemu-kvm                                                                    |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    # Processor test
+    VIRT=$(egrep -c '(vmx|svm)' /proc/cpuinfo)
+    if [ $VIRT -eq 0 ]; then
+        apt install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils virt-manager virt-viewer cpu-checker
+        adduser $USER libvirtd
+        echo "http://itman.in/kvm-hypervisor-setup/"
+        echo "https://losst.ru/ustanovka-kvm-ubuntu-16-04"
+    else
+        echo "kvm not supportet bu CPU"
+    fi
+
+popd; echo "DONE_QUEMU_KVM=1" >> $LOGF; fi
+
+
+answer "$AUTO_ORACLE_JAVA" \
+       "$AUTO_ORACLE_JAVA" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| Устанавливаем Oracle Java(TM) SE Runtime Environment                        |\n" \
+       "| http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    add-apt-repository -y ppa:webupd8team/java && apt update
+    apt install -y oracle-java8-installer
+
+popd; echo "DONE_ORACLE_JAVA=1" >> $LOGF; fi
+
 
 answer "$AUTO_FILE_UTILS" \
        "$DONE_FILE_UTILS" \
@@ -265,20 +340,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     # Adds start powertop whithout password
     sed -i '/# User privilege specification/a axa     ALL=(root) /usr/sbin/powertop' /etc/sudoers
 
-    popd; echo "DONE_FILE_UTILS=1" >> $LOGF
-fi
+popd; echo "DONE_FILE_UTILS=1" >> $LOGF; fi
 
-answer "$AUTO_SOLAAR" \
-       "$DONE_SOLAAR" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "|  Solaar - Logtech radio mice tool                                           |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    apt install -y solaar
-
-    popd; echo "DONE_SOLAAR=1" >> $LOGF
-fi
 
 answer "$AUTO_GNOME_FONTMANAGER" \
        "$DONE_GNOME_FONTMANAGER" \
@@ -292,8 +355,7 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:font-manager/staging && apt-get update
     apt install -y font-manager
 
-    popd; echo "DONE_GNOME_FONTMANAGER=1" >> $LOGF
-fi          
+popd; echo "DONE_GNOME_FONTMANAGER=1" >> $LOGF; fi          
 
 
 answer "$AUTO_GXNEUR" \
@@ -310,33 +372,20 @@ if [ $ANS = "Y" ]; then pushd /tmp;
   # Ubuntu 13.04 not supported
     #gsettings set com.canonical.Unity.Panel systray-whitelist "['all']" 
 
-    popd; echo "DONE_GXNEUR=1" >> $LOGF
-fi
+popd; echo "DONE_GXNEUR=1" >> $LOGF; fi
 
 
-answer "$AUTO_NFS_CLIENT" \
-       "$DONE_NFS_CLIENT" \
+answer "$AUTO_DIODON_CLIPBOARD_MANAGER" \
+       "$DONE_DIODON_CLIPBOARD_MANAGER" \
        "+-----------------------------------------------------------------------------+\n" \
-       "| nfs client and autonfs                                                      |\n" \
-       "|   http://sysadm.pp.ua/linux/nfs-and-autofs.html                             |\n" \
+       "|  Diodon Clipboard Manager                                                   |\n" \
        "+-----------------------------------------------------------------------------+\n" 
 if [ $ANS = "Y" ]; then pushd /tmp;
-    
-    apt install -y nfs-common
-    apt install -y autofs
-    sh -c 'echo "/nfs /etc/auto.nfs --timeout=60" >> /etc/auto.master'
-    sh -c 'echo "nas4d0     -rw,soft,intr,rsize=8192,wsize=8192     192.168.56.66:/raid0/data/_NAS_NFS_Exports_/Nas4d0" >> /etc/auto.nfs'
-    sh -c 'echo "srv1d0     -rw,soft,intr,rsize=8192,wsize=8192     192.168.56.67:/home/axa" >> /etc/auto.nfs'
-    /etc/init.d/autofs restart
-    mkdir /home/${USER}/Media
-    chown ${USER}:${USER} /home/${USER}/Media
-    cd /home/${USER}/Media
-    ln -s /nfs/nas4d0 .
-    ln -s /nfs/srv1d0 .
-    ln -s /media/axa .
-    
-    popd; echo "DONE_NFS_CLIENT=1" >> $LOGF
-fi
+
+    apt install -y diodon
+
+popd; echo "DONE_DIODON_CLIPBOARD_MANAGER=1" >> $LOGF; fi
+
 
 answer "$AUTO_COMPIZ" \
        "$DONE_COMPIZ" \
@@ -347,8 +396,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     apt install -y compiz compizconfig-settings-manager compiz-plugins-extra
 
-    popd; echo "DONE_COMPIZ=1" >> $LOGF
-fi
+popd; echo "DONE_COMPIZ=1" >> $LOGF; fi
+
 
 answer "$AUTO_TWEAK" \
        "$DONE_TWEAK" \
@@ -362,44 +411,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     apt install -f
     apt install -y unity-tweak-tool gnome-tweak-tool dconf-editor synaptic
 
-    popd; echo "DONE_TWEAK=1" >> $LOGF
-fi
+popd; echo "DONE_TWEAK=1" >> $LOGF; fi
 
-answer "$AUTO_QUEMU_KVM" \
-       "$DONE_QUEMU_KVM" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| qemu-kvm                                                                    |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    # Processor test
-    VIRT=$(egrep -c '(vmx|svm)' /proc/cpuinfo)
-    if [ $VIRT -eq 0 ]; then
-        apt install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils virt-manager virt-viewer cpu-checker
-        adduser $USER libvirtd
-        echo "http://itman.in/kvm-hypervisor-setup/"
-        echo "https://losst.ru/ustanovka-kvm-ubuntu-16-04"
-    else
-        echo "kvm not supportet bu CPU"
-    fi
-
-    popd; echo "DONE_QUEMU_KVM=1" >> $LOGF
-fi
-
-
-answer "$AUTO_ORACLE_JAVA" \
-       "$AUTO_ORACLE_JAVA" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| Устанавливаем Oracle Java(TM) SE Runtime Environment                        |\n" \
-       "| http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    add-apt-repository -y ppa:webupd8team/java && apt update
-    apt install -y oracle-java8-installer
-
-    popd; echo "DONE_ORACLE_JAVA=1" >> $LOGF
-fi
 
 answer "$AUTO_NOTIFY_OSD" \
        "$DONE_NOTIFY_OSD" \
@@ -415,8 +428,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:nilarimogard/webupd8 && apt update && apt upgrade
     apt install -y notifyosdconfig
 
-    popd; echo "DONE_NOTIFY_OSD=1" >> $LOGF
-fi
+popd; echo "DONE_NOTIFY_OSD=1" >> $LOGF; fi
+
 
 answer "$AUTO_THEMES_AND_ICON" \
        "$DONE_THEMES_AND_ICON" \
@@ -438,20 +451,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:noobslab/icons && apt-get update
     apt install -y nouvegnome-gray
 
-    opod; echo "DONE_THEMES_AND_ICON=1" >> $LOGF
-fi
+popd; echo "DONE_THEMES_AND_ICON=1" >> $LOGF; fi
 
-answer "$AUTO_DIODON_CLIPBOARD_MANAGER" \
-       "$DONE_DIODON_CLIPBOARD_MANAGER" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "|  Diodon Clipboard Manager                                                   |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    apt install -y diodon
-
-    popd; echo "DONE_DIODON_CLIPBOARD_MANAGER=1" >> $LOGF
-fi
 
 answer "$AUTO_STICKYNOTES_INDICATOR" \
        "$DONE_STICKYNOTES_INDICATOR" \
@@ -463,8 +464,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:umang/indicator-stickynotes && apt update
     apt install -y indicator-stickynotes
 
-    popd; echo "DONE_STICKYNOTES_INDICATOR=1" >> $LOGF
-fi
+popd; echo "DONE_STICKYNOTES_INDICATOR=1" >> $LOGF; fi
+
 
 answer "$AUTO_REDNOTEBOOK_INDICATOR" \
        "$DONE_REDNOTEBOOK_INDICATOR" \
@@ -476,8 +477,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:rednotebook/daily && sudo apt update
     apt install -y rednotebook
 
-    popd; echo "DONE_REDNOTEBOOK_INDICATOR=1" >> $LOGF
-fi
+popd; echo "DONE_REDNOTEBOOK_INDICATOR=1" >> $LOGF; fi
+
 
 answer "$AUTO_GNOME3" \
        "$DONE_GNOME3" \
@@ -494,8 +495,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     apt dist-upgrade -y
     apt install -y gnome gnome-shell
 
-    popd; echo "DONE_GNOME3=1" >> $LOGF
-fi
+popd; echo "DONE_GNOME3=1" >> $LOGF; fi
+
 
 answer "$AUTO_OWNCLOUD_CLIENT" \
        "$DONE_OWNCLOUD_CLIENT" \
@@ -511,8 +512,7 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     sudo apt-get update
     apt install -y owncloud-client
 
-    popd; echo "DONE_OWNCLOUD_CLIENT=1" >> $LOGF
-fi
+popd; echo "DONE_OWNCLOUD_CLIENT=1" >> $LOGF; fi
 
 
 # --------------------------------------------------------------
@@ -540,8 +540,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     wget https://od.lk/d/56708443_kKKU9/mac-3.99-u4_3.99-4.5_amd64.deb
     dpkg --install mac-3.99-u4_3.99-4.5_amd64.deb
     
-    popd; echo "DONE_MULTIMEDIA=1" >> $LOGF
-fi
+popd; echo "DONE_MULTIMEDIA=1" >> $LOGF; fi
+
 
 answer "$AUTO_AUDACIOS" \
        "$DONE_AUDACIOS" \
@@ -553,8 +553,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:nilarimogard/webupd8 && apt update
     apt install -y audacious
 
-    popd; echo "DONE_AUDACIOS=1" >> $LOGF
-fi
+popd; echo "DONE_AUDACIOS=1" >> $LOGF; fi
+
 
 
 # --------------------------------------------------------------
@@ -569,8 +569,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     apt install -y g++ md5deep fakeroot geany geany-plugins cmake bless
 
-    popd; echo "DONE_COMMON_DEV_TOOLS=1" >> $LOGF
-fi
+popd; echo "DONE_COMMON_DEV_TOOLS=1" >> $LOGF; fi
+
 
 answer "$AUTO_PYTHON36" \
        "$DONE_PYTHON36" \
@@ -579,6 +579,7 @@ answer "$AUTO_PYTHON36" \
        "| http://elporfirio.com:1017/                                                 |\n" \
        "| https://kadara.ru/2016/11/20/pycharm-2016-2-2017-license-server/            |\n" \
        "| https://jetbrains-server.ru/2017/03/31/pycharm-2016-2017-activation/        |\n" \
+       "| http://idea.imsxm.com                                                       |\n" \
        "+-----------------------------------------------------------------------------+\n"
 if [ $ANS = "Y" ]; then pushd /tmp;
 
@@ -588,8 +589,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:mystic-mirage/pycharm && apt update
     apt install -y pycharm
 
-    popd; echo "DONE_PYTHON36=1" >> $LOGF
-fi
+popd; echo "DONE_PYTHON36=1" >> $LOGF; fi
+
 
 answer "$AUTO_QT_PYQT" \
        "$DONE_QT_PYQT" \
@@ -604,8 +605,110 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     apt install -y build-essential python3-dev python3-pyqt5 pyqt5-dev-tools
     pip3 install SIP
     
-    popd; echo "DONE_QT_PYQT=1" >> $LOGF
-fi
+popd; echo "DONE_QT_PYQT=1" >> $LOGF; fi
+
+
+# --------------------------------------------------------------
+#    Системы проектирования для электроники
+answer "$AUTO_KICAD" \
+       "$DONE_KICAD" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| KiCad 4.0.4 Stable Release                                                  |\n" \
+       "| http://kicad-pcb.org/download/ubuntu/                                       |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    add-apt-repository --yes ppa:js-reynaud/kicad-4
+    apt update
+    apt install kicad
+
+popd; echo "DONE_KICAD=1" >> $LOGF; fi
+
+
+answer "$AUTO_STLINKV2_GUI" \
+       "$DONE_STLINKV2_GUI" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| Cross-platform STLink v2 GUI                                                |\n" \
+       "| https://github.com/fpoussin/QStlink2                                        |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    add-apt-repository ppa:fpoussin/ppa
+    apt-get update
+    apt-get install qstlink2
+    wget https://raw.githubusercontent.com/mobyfab/QStlink2/master/res/49-stlinkv2.rules
+    mv 49-stlinkv2.rules /etc/udev/rules.d
+    chown root:root /etc/udev/rules.d/49-stlinkv2.rules
+    
+popd; echo "DONE_STLINKV2_GUI=1" >> $LOGF; fi
+
+
+answer "$AUTO_OPENSTM32" \
+       "$DONE_OPENSTM32" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| System Workbench for STM32                                                  |\n" \
+       "| http://www.openstm32.org/HomePage                                           |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+    
+    mkdir -p /opt/Ac6/SystemWorkbench
+    chown $USER:$GROUP /opt/Ac6/SystemWorkbench
+    wget http://www.ac6-tools.com/downloads/SW4STM32/install_sw4stm32_linux_64bits-latest.run
+    chmod +x ./install_sw4stm32_linux_64bits-latest.run
+    sudo -u axa ./install_sw4stm32_linux_64bits-latest.run
+    
+popd; echo "DONE_OPENSTM32=1" >> $LOGF; fi
+
+
+answer "$AUTO_CROSSWORKS" \
+       "$DONE_CROSSWORKS" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| CrossWorks for ARM                                                          |\n" \
+       "|     is a complete C/C++ and assembly language development                   |\n" \
+       "|     system for Cortex-M, Cortex-A, Cortex-R, ARM7, ARM9, ARM11, and XScale  |\n" \
+       "|     microcontrollers.                                                       |\n" \
+       "| http://www.rowley.co.uk/arm/index.htm                                       |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+    
+    wget -qO- http://cdn.rowleydownload.co.uk/arm/releases/arm_crossworks_4_0_0_linux_x64.tar.gz | tar xzv
+    ./arm_crossworks_4_0_linux_x64/install_crossworks
+
+popd; echo "DONE_CROSSWORKS=1" >> $LOGF; fi
+
+
+answer "$AUTO_SEGGER" \
+       "$DONE_SEGGER" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| Segger Embedded Studio                                                      |\n" \
+       "|     is a streamlined and powerful C/C++ IDE for ARM microcontrollers.       |\n" \ 
+       "|     It is specifically designed to provide you with everything needed for   |\n" \
+       "|     professional embedded development: an all-in-one solution aiming at     |\n" \
+       "|     stability and a continuous workflow                                     |\n" \
+       "| https://www.segger.com/downloads/embeddedstudio                             |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+    
+    wget -qO- https://www.segger.com/downloads/files_static/embeddedstudio/Setup_EmbeddedStudio_v320_linux_x64.tar.gz | tar xzv
+    ./segger_embedded_studio_320_linux_x64/install_segger_embedded_studio
+    
+popd; echo "DONE_SEGGER=1" >> $LOGF; fi
+
+
+answer "$AUTO_FRITZING" \
+       "$DONE_FRITZING" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| Fritzing                                                                    |\n" \
+       "| http://fritzing.org/home/                                                   |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    wget -qO- http://fritzing.org/download/0.9.3b/linux-64bit/fritzing-0.9.3b.linux.AMD64.tar.bz2 | tar xjv
+    FRITZING=$(ls -d fritzing*)
+    chown -R $USER:$GROUP "$FRITZING"
+    
+popd; echo "DONE_FRITZING=1" >> $LOGF; fi
+
 
 answer "$AUTO_YAD" \
        "$DONE_YAD" \
@@ -617,8 +720,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:webupd8team/y-ppa-manager && apt update
     apt install -y yad
 
-    popd; echo "DONE_YAD=1" >> $LOGF
-fi
+popd; echo "DONE_YAD=1" >> $LOGF; fi
+
 
 echo -e "Устанавливаем Android Studio\n https://developer.android.com/studio/index.html\n"
 
@@ -642,8 +745,22 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     ln -s /usr/share/cr3/backgrounds/ ~/.cr3/backgrounds
     apt install -y fbreader
 
-    popd; echo "DONE_BOOKREADERS=1" >> $LOGF
-fi
+popd; echo "DONE_BOOKREADERS=1" >> $LOGF; fi
+
+
+answer "$AUTO_SONY_PRS505" \
+       "$DONE_SONY_PRS505" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "| Sony Prs-505 sync manager                                                   |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then pushd /tmp;
+
+    wget http://AxaRu.opendrive.com/files/68506444_wLMCL_a43e/mngr505
+    chmod +x mngr505
+    mv mngr505 /usr/bin
+
+popd; echo "DONE_SONY_PRS505=1" >> $LOGF; fi
+
 
 answer "$AUTO_FB2EDIT" \
        "$DONE_FB2EDIT" \
@@ -658,29 +775,14 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     # сборки для 16.04 нет. Ставим сборку от 14.04
     #add-apt-repository -y ppa:lintest/fb2edit
     #apt update && apt install fb2edit
-
     wget https://launchpadlibrarian.net/180250769/fb2edit_0.0.9-utopic2_amd64.deb
     dpkg --install fb2edit_0.0.9-utopic2_amd64.deb
 
     add-apt-repository -y ppa:ubuntuhandbook1/sigil
     apt update && apt install -y sigil sigil-data
 
-    popd; echo "DONE_FB2EDIT=1" >> $LOGF
-fi
+popd; echo "DONE_FB2EDIT=1" >> $LOGF; fi
 
-answer "$AUTO_SONY_PRS505" \
-       "$DONE_SONY_PRS505" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| Sony Prs-505 sync manager                                                   |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    wget http://AxaRu.opendrive.com/files/68506444_wLMCL_a43e/mngr505
-    chmod +x mngr505
-    mv mngr505 /usr/bin
-
-    popd; echo "DONE_SONY_PRS505=1" >> $LOGF
-fi
 
 answer "$AUTO_LIBREOFFICE" \
        "$DONE_LIBREOFFICE" \
@@ -699,8 +801,22 @@ if [ $ANS = "Y" ]; then  pushd /tmp;
     # расстановка переносов
     apt install -y openoffice.org-hyphenation
 
-    popd; echo "DONE_LIBREOFFICE=1" >> $LOGF
-fi
+popd; echo "DONE_LIBREOFFICE=1" >> $LOGF; fi
+
+
+answer "$AUTO_WPOFFICE" \
+       "$DONE_WPOFFICE" \
+       "+-----------------------------------------------------------------------------+\n" \
+       "|   WPOffice                                                                  |\n" \
+       "|   China office compliant with MSO                                           |\n" \
+       "+-----------------------------------------------------------------------------+\n" 
+if [ $ANS = "Y" ]; then  pushd /tmp;
+
+    wget http://kdl1.cache.wps.com/ksodl/download/linux/a21/wps-office_10.1.0.5707~a21_amd64.deb
+    dpkg --install wps-office_10.1.0.5707~a21_amd64.deb
+
+popd; echo "DONE_WPOFFICE=1" >> $LOGF; fi
+
 
 answer "$AUTO_RUSSIAN_DIC" \
        "$DONE_RUSSIAN_DIC" \
@@ -721,8 +837,9 @@ if [ $ANS = "Y" ]; then pushd /tmp;
                      scim-modules-table \
                      scim-tables-additional \
                      myspell-ru
-    popd; echo "DONE_RUSSIAN_DIC=1" >> $LOGF
-fi
+
+popd; echo "DONE_RUSSIAN_DIC=1" >> $LOGF; fi
+
 
 answer "$AUTO_GOLDENDICT" \
        "$DONE_GOLDENDICT" \
@@ -735,8 +852,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     apt install -y goldendict
 
-    popd; echo "DONE_GOLDENDICT=1" >> $LOGF
-fi
+popd; echo "DONE_GOLDENDICT=1" >> $LOGF; fi
+
 
 answer "$AUTO_KEEPASSX" \
        "$DONE_KEEPASSX" \
@@ -747,18 +864,20 @@ if [ $ANS = "Y" ]; then pushd /tmp;
 
     apt install -y keepassx
 
-    popd; echo "DONE_KEEPASSX=1" >> $LOGF
-fi
+popd; echo "DONE_KEEPASSX=1" >> $LOGF; fi
+
 
 answer "$AUTO_GNUCASH" \
        "$DONE_GNUCASH" \
        "+-----------------------------------------------------------------------------+\n" \
        "|  gnucash                                                                    |\n" \
        "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then
+if [ $ANS = "Y" ]; then pushd /tmp;
+
     apt install -y gnucash
-    echo "DONE_GNUCASH=1" >> $LOGF
-fi
+
+popd; echo "DONE_GNUCASH=1" >> $LOGF; fi
+
 
 answer "$AUTO_GRAPHIC_TOOLS" \
        "$DONE_GRAPHIC_TOOLS" \
@@ -773,8 +892,7 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     wget http://get.code-industry.net/public/master-pdf-editor-4.1.30_qt5.amd64.deb
     dpkg -i master-pdf-editor-4.1.30_qt5.amd64.deb
 
-    popd echo "DONE_GRAPHIC_TOOLS=1" >> $LOGF
-fi
+popd echo "DONE_GRAPHIC_TOOLS=1" >> $LOGF; fi
 
 
 answer "$AUTO_SKYPE" \
@@ -789,8 +907,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     apt-get update
     apt install -y skype
 
-    popd; echo "DONE_SKYPE=1" >> $LOGF
-fi
+popd; echo "DONE_SKYPE=1" >> $LOGF; fi
+
 
 answer "$AUTO_TELEGRAM" \
        "$DONE_TELEGRAM" \
@@ -802,8 +920,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:atareao/telegram && apt update
     apt install -y telegram
 
-    popd; echo "DONE_TELEGRAM=1" >> $LOGF
-fi
+popd; echo "DONE_TELEGRAM=1" >> $LOGF; fi
+
 
 answer "$AUTO_TRANSGUI" \
        "$DONE_TRANSGUI" \
@@ -818,8 +936,8 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     mv lang /usr/bin
     mv transgui.png /home/axa/.icons
     
-    popd; echo "DONE_TRANSGUI=1" >> $LOGF
-fi
+popd; echo "DONE_TRANSGUI=1" >> $LOGF; fi
+
 
 answer "$AUTO_WEATHER_WIDGET" \
        "$DONE_WEATHER_WIDGET" \
@@ -833,112 +951,23 @@ if [ $ANS = "Y" ]; then pushd /tmp;
     add-apt-repository -y ppa:noobslab/apps && apt update
     apt install -y gis-weather
 
-    popd; echo "DONE_WEATHER_WIDGET=1" >> $LOGF
-fi
+popd; echo "DONE_WEATHER_WIDGET=1" >> $LOGF; fi
 
-# --------------------------------------------------------------
-#    Системы проектирования для электроники
-#
 
-answer "$AUTO_KICAD" \
-       "$DONE_KICAD" \
+answer "$AUTO_OUTWIKER" \
+       "$DONE_OUTWIKER" \
        "+-----------------------------------------------------------------------------+\n" \
-       "| KiCad 4.0.4 Stable Release                                                  |\n" \
-       "| http://kicad-pcb.org/download/ubuntu/                                       |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
+       "|   OutWiker - Программа для хранения заметок                                 |\n" \
+       "|      http://jenyay.net                                                      |\n" \
+       "+-----------------------------------------------------------------------------+\n"
 if [ $ANS = "Y" ]; then pushd /tmp;
 
-    add-apt-repository --yes ppa:js-reynaud/kicad-4
-    apt update
-    apt install kicad
-
-    popd; echo "DONE_KICAD=1" >> $LOGF
-fi
-
-answer "$AUTO_STLINKV2_GUI" \
-       "$DONE_STLINKV2_GUI" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| Cross-platform STLink v2 GUI                                                |\n" \
-       "| https://github.com/fpoussin/QStlink2                                        |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    add-apt-repository ppa:fpoussin/ppa
+    apt-add-repository -y ppa:outwiker-team/ppa
     apt-get update
-    apt-get install qstlink2
-    wget https://raw.githubusercontent.com/mobyfab/QStlink2/master/res/49-stlinkv2.rules
-    mv 49-stlinkv2.rules /etc/udev/rules.d
-    chown root:root /etc/udev/rules.d/49-stlinkv2.rules
-    
-    popd; echo "DONE_STLINKV2_GUI=1" >> $LOGF
-fi
+    apt-get install -y outwiker
 
-answer "$AUTO_OPENSTM32" \
-       "$DONE_OPENSTM32" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| System Workbench for STM32                                                  |\n" \
-       "| http://www.openstm32.org/HomePage                                           |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-    
-    mkdir -p /opt/Ac6/SystemWorkbench
-    chown $USER:$GROUP /opt/Ac6/SystemWorkbench
-    wget http://www.ac6-tools.com/downloads/SW4STM32/install_sw4stm32_linux_64bits-latest.run
-    chmod +x ./install_sw4stm32_linux_64bits-latest.run
-    sudo -u axa ./install_sw4stm32_linux_64bits-latest.run
-    
-    popd; echo "DONE_OPENSTM32=1" >> $LOGF
-fi
+popd; echo "DONE_OUTWIKER=1" >> $LOGF; fi
 
-answer "$AUTO_CROSSWORKS" \
-       "$DONE_CROSSWORKS" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| CrossWorks for ARM                                                          |\n" \
-       "|     is a complete C/C++ and assembly language development                   |\n" \
-       "|     system for Cortex-M, Cortex-A, Cortex-R, ARM7, ARM9, ARM11, and XScale  |\n" \
-       "|     microcontrollers.                                                       |\n" \
-       "| http://www.rowley.co.uk/arm/index.htm                                       |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-    
-    wget -qO- http://cdn.rowleydownload.co.uk/arm/releases/arm_crossworks_4_0_0_linux_x64.tar.gz | tar xzv
-    ./arm_crossworks_4_0_linux_x64/install_crossworks
-
-    popd; echo "DONE_CROSSWORKS=1" >> $LOGF
-fi
-
-answer "$AUTO_SEGGER" \
-       "$DONE_SEGGER" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| Segger Embedded Studio                                                      |\n" \
-       "|     is a streamlined and powerful C/C++ IDE for ARM microcontrollers.       |\n" \ 
-       "|     It is specifically designed to provide you with everything needed for   |\n" \
-       "|     professional embedded development: an all-in-one solution aiming at     |\n" \
-       "|     stability and a continuous workflow                                     |\n" \
-       "| https://www.segger.com/downloads/embeddedstudio                             |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-    
-    wget -qO- https://www.segger.com/downloads/files_static/embeddedstudio/Setup_EmbeddedStudio_v320_linux_x64.tar.gz | tar xzv
-    ./segger_embedded_studio_320_linux_x64/install_segger_embedded_studio
-    
-    popd; echo "DONE_SEGGER=1" >> $LOGF
-fi
-
-answer "$AUTO_FRITZING" \
-       "$DONE_FRITZING" \
-       "+-----------------------------------------------------------------------------+\n" \
-       "| Fritzing                                                                    |\n" \
-       "| http://fritzing.org/home/                                                   |\n" \
-       "+-----------------------------------------------------------------------------+\n" 
-if [ $ANS = "Y" ]; then pushd /tmp;
-
-    wget -qO- http://fritzing.org/download/0.9.3b/linux-64bit/fritzing-0.9.3b.linux.AMD64.tar.bz2 | tar xjv
-    FRITZING=$(ls -d fritzing*)
-    chown -R $USER:$GROUP "$FRITZING"
-    
-    popd; echo "DONE_FRITZING=1" >> $LOGF
-fi
 
 ######################################################################
 #     Заключительные коментарии:
