@@ -618,9 +618,9 @@ answer "$AUTO_KICAD" \
        "+-----------------------------------------------------------------------------+\n" 
 if [ $ANS = "Y" ]; then pushd /tmp;
 
-    add-apt-repository --yes ppa:js-reynaud/kicad-4
+    add-apt-repository --yes ppa:js-reynaud/kicad-5
     apt update
-    apt install kicad
+    apt install -y kicad
 
 popd; echo "DONE_KICAD=1" >> $LOGF; fi
 
